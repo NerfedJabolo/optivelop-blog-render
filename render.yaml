@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: my-bun-app
+    name: optivelop-blog
     env: bun
     buildCommand: 'bun install'
     startCommand: 'bun run index.js'
