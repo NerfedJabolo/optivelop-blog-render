@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: my-bun-app
+    env: bun
+    buildCommand: 'bun install'
+    startCommand: 'bun run index.js'
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://euler:0f61VcV5UWozRWxp@learning-mongo.jcsdeht.mongodb.net/node-tuts
