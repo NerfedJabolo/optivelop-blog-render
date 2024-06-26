@@ -1,0 +1,121 @@
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .subtitle-section {
+            margin-bottom: 20px;
+        }
+        .subtitle-section input[type="text"],
+        .subtitle-section textarea {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Form</h1>
+    <form id="dynamic-form">
+        <label for="blog-title">Blog Title:</label>
+        <input type="text" id="blog-title" name="blog-title" placeholder="Enter blog title" required>
+        <div class="subtitle-section">
+            <h2>Subtitle 1</h2>
+            <input type="text" name="subtitle-1" placeholder="Enter subtitle">
+            <textarea name="paragraph-1-1" placeholder="Enter paragraph"></textarea>
+            <button type="button" onclick="addParagraph(this)">Add Paragraph</button>
+        </div>
+        <button type="button" onclick="addSubtitle()">Add Subtitle</button>
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <script>
+        let subtitleCount = 1;
+
+        function addSubtitle() {
+            subtitleCount++;
+            const form = document.getElementById('dynamic-form');
+            const subtitleSection = document.createElement('div');
+            subtitleSection.className = 'subtitle-section';
+
+            const subtitleTitle = document.createElement('h2');
+            subtitleTitle.textContent = 'Subtitle ' + subtitleCount;
+            subtitleSection.appendChild(subtitleTitle);
+
+            const subtitleInput = document.createElement('input');
+            subtitleInput.type = 'text';
+            subtitleInput.name = 'subtitle-' + subtitleCount;
+            subtitleInput.placeholder = 'Enter subtitle';
+            subtitleSection.appendChild(subtitleInput);
+
+            const paragraphTextarea = document.createElement('textarea');
+            paragraphTextarea.name = 'paragraph-' + subtitleCount + '-1';
+            paragraphTextarea.placeholder = 'Enter paragraph';
+            subtitleSection.appendChild(paragraphTextarea);
+
+            const addParagraphButton = document.createElement('button');
+            addParagraphButton.type = 'button';
+            addParagraphButton.textContent = 'Add Paragraph';
+            addParagraphButton.onclick = function () {
+                addParagraph(this);
+            };
+            subtitleSection.appendChild(addParagraphButton);
+
+            form.insertBefore(subtitleSection, form.children[form.children.length - 2]);
+        }
+
+        function addParagraph(button) {
+            const subtitleSection = button.parentElement;
+            const subtitleNumber = subtitleSection.querySelector('h2').textContent.split(' ')[1];
+            const paragraphCount = subtitleSection.querySelectorAll('textarea').length + 1;
+
+            const paragraphTextarea = document.createElement('textarea');
+            paragraphTextarea.name = 'paragraph-' + subtitleNumber + '-' + paragraphCount;
+            paragraphTextarea.placeholder = 'Enter paragraph';
+            subtitleSection.insertBefore(paragraphTextarea, button);
+        }
+
+        function submitForm() {
+            const form = document.getElementById('dynamic-form');
+            const formData = new FormData(form);
+            const data = {
+                title: formData.get('blog-title'),
+                subtitles: []
+            };
+
+            let currentSubtitle = {};
+            formData.forEach((value, key) => {
+                const keyParts = key.split('-');
+                if (keyParts[0] === 'subtitle') {
+                    if (Object.keys(currentSubtitle).length) {
+                        data.subtitles.push(currentSubtitle);
+                    }
+                    currentSubtitle = {
+                        title: value,
+                        paragraphs: []
+                    };
+                } else if (keyParts[0] === 'paragraph') {
+                    currentSubtitle.paragraphs.push(value);
+                }
+            });
+            if (Object.keys(currentSubtitle).length) {
+                data.subtitles.push(currentSubtitle);
+            }
+
+            fetch('/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(async response => await response.json())
+            .catch((error) => {
+                alert('Error saving blog.');
+                console.error('Error:', error);
+            });
+        }
+    </script>
