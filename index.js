@@ -1,10 +1,11 @@
 import { Byte, cors, send } from '@bit-js/byte';
-import html from './static/index.html' with { type: 'text' };
+import { join } from 'path';
+const htmlPath = join(process.cwd(), 'static', 'index.html');
 import mongoose from 'mongoose';
 import Blog from './models/Blog';
 
 const app = new Byte();
-app.use(cors({allowOrigin: 'http://localhost:5173'}))
+app.use(cors({ allowOrigin: 'http://localhost:5173' }));
 
 const dbURI = Bun.env.MONGO_URI;
 
@@ -13,18 +14,21 @@ mongoose
   .then(() => console.log('Connected to database'))
   .catch((err) => console.error(err));
 
-app.get('/', send.html(html));
+app.get('/', send.html(Bun.file(htmlPath)));
 
 app.post('/create', async (ctx) => {
   try {
     const data = await ctx.req.json();
     const { title, subtitles } = data;
 
-    const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    const slug = title
+      .toLowerCase()
+      .replace(/ /g, '-')
+      .replace(/[^\w-]+/g, '');
 
-    const formattedSubtitles = subtitles.map(subtitle => ({
+    const formattedSubtitles = subtitles.map((subtitle) => ({
       title: subtitle.title,
-      paragraphs: subtitle.paragraphs.map(paragraph => ({ text: paragraph }))
+      paragraphs: subtitle.paragraphs.map((paragraph) => ({ text: paragraph })),
     }));
 
     const newBlog = new Blog({ title, slug, subtitles: formattedSubtitles });
@@ -50,7 +54,7 @@ app.get('/getBlogs', async (ctx) => {
 
 app.get('/blog/:slug', async (ctx) => {
   try {
-    const slug = ctx.params.slug
+    const slug = ctx.params.slug;
     const blog = await Blog.findOne({ slug: slug });
     if (!blog) {
       return ctx.json({ message: 'Blog not found' });
@@ -61,6 +65,5 @@ app.get('/blog/:slug', async (ctx) => {
     return ctx.json({ message: 'Error fetching blog.', error: error.message });
   }
 });
-
 
 export default app;
