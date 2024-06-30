@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import Blog from './models/Blog';
 
 const app = new Byte();
-app.use(cors({ allowOrigin: 'http://localhost:5173' }));
+app.use(cors({ allowOrigin: 'https://optivelop.xyz' }));
 
 const dbURI = Bun.env.MONGO_URI;
 
