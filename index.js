@@ -1,6 +1,7 @@
-import { Byte, cors, send } from '@bit-js/byte';
+import { Byte, cors, send, query } from '@bit-js/byte';
 import { join } from 'path';
 const htmlPath = join(process.cwd(), 'static', 'index.html');
+const htmlString = Bun.file(htmlPath);
 import mongoose from 'mongoose';
 import Blog from './models/Blog';
 
@@ -14,7 +15,30 @@ mongoose
   .then(() => console.log('Connected to database'))
   .catch((err) => console.error(err));
 
-app.get('/', send.html(Bun.file(htmlPath)));
+app.get('/', (ctx) => {
+  const parse = query.get('password');
+  if (parse(ctx) === Bun.env.FORM_PASS) {
+    return ctx.html(htmlString);
+  } else {
+    return ctx.redirect('/login', 301);
+  }
+});
+
+app.get(
+  '/login',
+  send.html(`<html>
+        <body>
+            <script>
+                const password = prompt('Enter password:');
+                if (password) {
+                    window.location.href = '/?password=' + encodeURIComponent(password);
+                } else {
+                    alert('Password is required.');
+                }
+            </script>
+        </body>
+        </html>`)
+);
 
 app.post('/create', async (ctx) => {
   try {
